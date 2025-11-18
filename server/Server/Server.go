@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"runtime"
+	"strconv"
 )
 
 type Server struct {
@@ -18,6 +19,8 @@ type Server struct {
 	OnError   func(err string)
 	OnStart   func(srv *Server)
 	OnConnect func(srv *Server, client *TcpConnection)
+	OnClose   func(srv *Server, client *TcpConnection)
+	OnReceive func(srv *Server, client *TcpConnection, data []byte)
 }
 
 func (srv *Server) CallEventFunc(eventName string, args ...interface{}) {
@@ -28,6 +31,10 @@ func (srv *Server) CallEventFunc(eventName string, args ...interface{}) {
 		srv.OnStart(srv) // 断言
 	case "connect":
 		srv.OnConnect(srv, args[0].(*TcpConnection))
+	case "close":
+		srv.OnClose(srv, args[0].(*TcpConnection))
+	case "receive":
+		srv.OnReceive(srv, args[0].(*TcpConnection), args[1].([]byte))
 	default:
 		fmt.Println("unknown event name:", eventName)
 	}
@@ -46,7 +53,7 @@ func (srv *Server) StartInfo() {
 }
 
 func (srv *Server) Start() {
-	listen, err := net.Listen("tcp4", srv.Address)
+	listen, err := net.Listen(srv.Network, srv.Address)
 	if err != nil {
 		// 出问题了就调用一个错误处理函数
 		// srv.OnError(err.Error())
@@ -77,6 +84,17 @@ func (srv *Server) AddClient(client *TcpConnection) {
 	// fmt.Println("当前链接数:", len(srv.Clients))
 }
 
+func (srv *Server) RemoveClient(client *TcpConnection) {
+	ip := client.Conn.RemoteAddr().String()
+	_, ok := srv.Clients[ip]
+	if ok {
+		// 找到就干掉他
+		delete(srv.Clients, ip)
+		// 客户端数量减少
+		srv.ClientNum--
+	}
+}
+
 func (srv *Server) EventLoop() {
 	for {
 		conn, err := srv.Listen.Accept()
@@ -86,11 +104,12 @@ func (srv *Server) EventLoop() {
 		}
 
 		if srv.ClientNum > srv.MaxClientNum {
-			srv.CallEventFunc("error", "超过最大连接数限制")
-
+			srv.CallEventFunc("error", "超过最大连接数限制"+strconv.Itoa(srv.MaxClientNum))
+			return
 		}
 
-		client, err := MakeClient(conn, srv.Network)
+		// 需要将当前服务传递过去
+		client, err := MakeClient(srv, conn, srv.Network)
 		if err != nil {
 			srv.CallEventFunc("error", err.Error())
 			return

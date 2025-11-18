@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
+
 	(&server.Server{
 		Network:      "tcp", // stream, http, websocket
 		Address:      "0.0.0.0:9501",
@@ -21,6 +22,13 @@ func main() {
 		},
 		OnStart: func(srv *server.Server) {
 			fmt.Println("成功启动服务")
+		},
+		OnClose: func(srv *server.Server, client *server.TcpConnection) {
+			fmt.Println("客户端关闭了连接")
+		},
+		OnReceive: func(srv *server.Server, client *server.TcpConnection, data []byte) {
+			fmt.Println("客户端发来的数据是: ", string(data), data) // data 十进制数据
+			client.Send("我是服务器")
 		},
 	}).Start()
 }
