@@ -40,7 +40,7 @@ func (tc *TcpConnection) RemoveClient() {
 // HandleMessage 处理消息
 func (tc *TcpConnection) HandleMessage() {
 
-	for {
+	for tc.Run {
 		recvBytes, err := tc.Conn.Read(tc.Buffer[tc.NLast:]) // 累加数据
 		if err != nil {
 			if err == io.EOF {
