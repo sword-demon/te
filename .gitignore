@@ -1,0 +1,48 @@
+# 忽略 Go 项目常见的编译产物、临时文件和编辑器配置
+
+# 二进制和共享库
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+
+# 构建输出目录
+bin/
+_build/
+dist/
+
+# 覆盖率/分析输出
+coverage.out
+*.cover
+*.prof
+
+# 依赖/vendor（如果你把 vendor 提交到仓库，请注释或删除这一行）
+vendor/
+
+# Godeps
+Godeps/
+
+# Go workspace 文件（视项目需要）
+go.work
+
+# 不要忽略 go.mod 和 go.sum（模块依赖信息应提交）
+# 编辑器/IDE
+.vscode/
+.idea/
+*.iml
+
+# 操作系统/临时文件
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+
+# 日志和临时文件
+*.log
+*.tmp
+
+# 编译产生的目标/归档
+*.o
+*.a
