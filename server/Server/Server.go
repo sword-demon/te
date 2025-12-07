@@ -46,14 +46,15 @@ func (srv *Server) StartInfo() {
 	fmt.Println("\u001B[33;40mUsing protocol ", srv.Network, "\u001B[0m")
 
 	fmt.Println("\u001B[33;40mplatform  ", runtime.GOOS, "\u001B[0m")
-	fmt.Println("\u001B[33;40mcpu Num ", runtime.NumCPU(), "\u001B[0m")
-	fmt.Println("\u001B[33;40mversion ", runtime.Version(), "\u001B[0m")
-	fmt.Println("\u001B[33;40mPID ", os.Getpid(), "\u001B[0m")
+	fmt.Println("\u001B[33;40mcpu Num   ", runtime.NumCPU(), "\u001B[0m")
+	fmt.Println("\u001B[33;40mversion   ", runtime.Version(), "\u001B[0m")
+	fmt.Println("\u001B[33;40mPID       ", os.Getpid(), "\u001B[0m")
 	fmt.Println("------------------------------------------------------------")
 }
 
 func (srv *Server) Start() {
-	listen, err := net.Listen(srv.Network, srv.Address)
+	// 不设置为 tcp4 会有 ipv6 的问题
+	listen, err := net.Listen("tcp4", srv.Address)
 	if err != nil {
 		// 出问题了就调用一个错误处理函数
 		// srv.OnError(err.Error())

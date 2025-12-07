@@ -1,5 +1,4 @@
-// / 封装一个链接
-package server
+package client
 
 import (
 	"errors"
@@ -13,17 +12,17 @@ type TcpConnection struct {
 	ProtocolName string
 	Buffer       [1024]byte // 缓冲区存储读取到的数据 需要动态调整
 	NLast        int        // 目前接受了多少字节
-	Server       *Server    // 所属的服务
+	Client       *Client    // 所属的客户端
 	Run          bool
 }
 
-func MakeClient(server *Server, conn net.Conn, protocolName string) (client *TcpConnection, err error) {
+func MakeClient(c *Client, conn net.Conn) (client *TcpConnection, err error) {
 	client = &TcpConnection{
 		Conn:         conn,
-		ProtocolName: protocolName,
+		ProtocolName: c.Network,
 		NLast:        0,
 		Run:          true,
-		Server:       server, // 关联上服务
+		Client:       c,
 	}
 	return
 }
@@ -31,18 +30,20 @@ func MakeClient(server *Server, conn net.Conn, protocolName string) (client *Tcp
 // RemoveClient 移除客户端链接
 // 并且调用关闭链接的事件函数
 func (tc *TcpConnection) RemoveClient() {
-	tc.Server.CallEventFunc("close", tc)
+	tc.Client.CallEventFunc("close", tc)
 	tc.NLast = 0    // 重置缓冲区位置
 	tc.Conn.Close() // 关闭连接 很重要
 	tc.Run = false
-	tc.Server.RemoveClient(tc)
+	// tc.Client.RemoveClient(tc)
 }
 
 // HandleMessage 处理消息
 func (tc *TcpConnection) HandleMessage() {
 
+	// tc.Run 为 false 的时候就退出连接
+	defer wg.Done()
+
 	for tc.Run {
-		// read recv recvfrom recvmsg 底层函数
 		recvBytes, err := tc.Conn.Read(tc.Buffer[tc.NLast:]) // 累加数据
 		if err != nil {
 			if err == io.EOF {
@@ -55,12 +56,10 @@ func (tc *TcpConnection) HandleMessage() {
 
 		tc.NLast += recvBytes
 
-		fmt.Println("tc.ProtocolName =", tc.ProtocolName)
-
 		switch tc.ProtocolName {
 		case "tcp":
 			// fmt.Println("receive: ", string(tc.Buffer[0:tc.NLast]))
-			tc.Server.CallEventFunc("receive", tc, tc.Buffer[0:tc.NLast])
+			tc.Client.CallEventFunc("receive", tc, tc.Buffer[0:tc.NLast])
 			tc.NLast = 0 // 重置位置
 		case "stream":
 		case "http":
@@ -71,6 +70,8 @@ func (tc *TcpConnection) HandleMessage() {
 }
 
 func (tc *TcpConnection) Send(msg string) {
+	fmt.Println("client send msg: ", msg)
+	fmt.Println("protocol name: ", tc.ProtocolName)
 	switch tc.ProtocolName {
 	case "tcp":
 		_ = tc.WriteData([]byte(msg))
