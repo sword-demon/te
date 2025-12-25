@@ -3,7 +3,6 @@ package server
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"net"
 )
@@ -55,12 +54,11 @@ func (tc *TcpConnection) HandleMessage() {
 
 		tc.NLast += recvBytes
 
-		fmt.Println("tc.ProtocolName =", tc.ProtocolName)
-
 		switch tc.ProtocolName {
 		case "tcp":
 			// fmt.Println("receive: ", string(tc.Buffer[0:tc.NLast]))
 			tc.Server.CallEventFunc("receive", tc, tc.Buffer[0:tc.NLast])
+			// tc.Buffer 这里是覆盖接收
 			tc.NLast = 0 // 重置位置
 		case "stream":
 		case "http":

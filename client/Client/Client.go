@@ -27,8 +27,12 @@ func (c *Client) Start() {
 	}
 
 	c.CallEventFunc("start")
-	client, _ := MakeClient(c, conn)
-	c.Connect = client
+	// 创建客户端连接
+	c.Connect, err = MakeClient(c, conn)
+	if err != nil {
+		c.CallEventFunc("error", err.Error())
+		return
+	}
 	// 创建客户端连接
 	c.CallEventFunc("connect", c.Connect)
 

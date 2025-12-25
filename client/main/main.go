@@ -13,10 +13,10 @@ func main() {
 	// 	return
 	// }
 
-	// // message := "china and american\r\ni like money\r\n"
+	// // message := "china and American\r\ni like money\r\n"
 	// // 测试 粘包和少包
 
-	// var message []byte = []byte("china and american")
+	// var message []byte = []byte("China and American")
 	// conn.Write(message[0:5]) // 只发一点点
 
 	// time.Sleep(time.Second * 2)
@@ -27,7 +27,7 @@ func main() {
 	// go build -o te_client client/main/main.go
 	(&client.Client{
 		Network: "tcp",
-		Address: "120.0.0.1:9501",
+		Address: "127.0.0.1:9501",
 		OnError: func(err string) {
 			fmt.Println("客户端服务器启动失败: err", err)
 		},
