@@ -31,8 +31,11 @@ func MakeClient(server *Server, conn net.Conn, protocolName string) (client *Tcp
 // 并且调用关闭链接的事件函数
 func (tc *TcpConnection) RemoveClient() {
 	tc.Server.CallEventFunc("close", tc)
-	tc.NLast = 0    // 重置缓冲区位置
-	tc.Conn.Close() // 关闭连接 很重要
+	tc.NLast = 0 // 重置缓冲区位置
+	err := tc.Conn.Close()
+	if err != nil {
+		return
+	} // 关闭连接 很重要
 	tc.Run = false
 	tc.Server.RemoveClient(tc)
 }
